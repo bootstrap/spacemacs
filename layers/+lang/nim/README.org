@@ -2,27 +2,38 @@
 
 [[file:img/logo.png]]
 
-* Table of Contents                                         :TOC_4_gh:noexport:
- - [[#description][Description]]
- - [[#install][Install]]
-   - [[#layer][Layer]]
- - [[#working-with-nim][Working with Nim]]
-   - [[#nim-commands-start-with-m][Nim commands (start with =m=):]]
+* Table of Contents                     :TOC_4_gh:noexport:
+- [[#description][Description]]
+  - [[#features][Features:]]
+- [[#install][Install]]
+- [[#working-with-nim][Working with Nim]]
+  - [[#nim-commands-start-with-m][Nim commands (start with =m=):]]
 
 * Description
+This layer adds support for the multi-paradigm language =Nim=.
 
-This layer adds support for nim (nimrod).
+** Features:
+- Code completion.
+- Jump to definition.
+- Syntax checking.
 
 * Install
-** Layer
 To use this configuration layer, add it to your =~/.spacemacs=. You will need to
 add =nim= to the existing =dotspacemacs-configuration-layers= list in this
 file.
 
-* Working with Nim
+For syntax checking, the =syntax-checking= layer must also be added.
 
+For all the features to work properly, =nimsuggest= must be installed properly
+and =nimsuggest= binary must be in $PATH.
+
+* Working with Nim
 ** Nim commands (start with =m=):
 
-| Key Binding | Description                |
-|-------------+----------------------------|
-| ~SPC m c r~ | nim compile --run main.nim |
+| Key binding          | Description                  |
+|----------------------+------------------------------|
+| ~SPC m c r~          | =nim compile --run main.nim= |
+| ~SPC m g g~ or ~M-.~ | Jump to definition           |
+| ~SPC m g b~ or ~M-,~ | Jump back                    |
+| ~SPC m h h~          | Show symbol’s documentation  |
+|----------------------+------------------------------|
