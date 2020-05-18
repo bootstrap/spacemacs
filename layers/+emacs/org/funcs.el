@@ -67,3 +67,18 @@
 (defun spacemacs/org-trello-push-card ()
   (interactive)
   (org-trello-sync-card))
+
+(defun spacemacs/org-clock-jump-to-current-clock ()
+  (interactive)
+  (org-clock-jump-to-current-clock))
+
+
+
+(defun spacemacs/org-reveal-advice (&rest _args)
+  "Unfold the org headings for a target line.
+This can be used to advice functions that might open .org files.
+
+For example: To unfold from a magit diff buffer, evaluate the following:
+(advice-add 'magit-diff-visit-file :after #'spacemacs/org-reveal-advice)"
+  (when (derived-mode-p 'org-mode)
+    (org-reveal)))

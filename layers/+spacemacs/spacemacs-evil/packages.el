@@ -29,6 +29,7 @@
         ;; Temporarily disabled, pending the resolution of
         ;; https://github.com/7696122/evil-terminal-cursor-changer/issues/8
         ;; evil-terminal-cursor-changer
+        evil-textobj-line
         evil-tutor
         (evil-unimpaired :location (recipe :fetcher local))
         evil-visual-mark-mode
@@ -36,7 +37,7 @@
         (hs-minor-mode :location built-in)
         (linum-relative :toggle (version< emacs-version "26"))
         vi-tilde-fringe
-        ))
+        eldoc))
 
 (defun spacemacs-evil/init-evil-anzu ()
   (use-package evil-anzu
@@ -62,6 +63,12 @@
               status)))
         (setq anzu-mode-line-update-function
               'spacemacs/anzu-update-mode-line)))))
+
+(defun spacemacs-evil/post-init-eldoc ()
+  (eldoc-add-command #'evil-cp-insert)
+  (eldoc-add-command #'evil-cp-insert-at-end-of-form)
+  (eldoc-add-command #'evil-cp-insert-at-beginning-of-form)
+  (eldoc-add-command #'evil-cp-append))
 
 (defun spacemacs-evil/init-evil-args ()
   (use-package evil-args
@@ -281,22 +288,32 @@
       (spacemacs|define-transient-state evil-numbers
         :title "Evil Numbers Transient State"
         :doc
-        "\n[_+_/_=_] increase number  [_-_] decrease  [0..9] prefix  [_q_] quit"
+        "\n[_+_/_=_/_k_] increase number  [_-_/___/_j_] decrease  [0..9] prefix  [_q_] quit"
+        :foreign-keys run
         :bindings
         ("+" evil-numbers/inc-at-pt)
         ("=" evil-numbers/inc-at-pt)
+        ("k" evil-numbers/inc-at-pt)
         ("-" evil-numbers/dec-at-pt)
+        ("_" evil-numbers/dec-at-pt)
+        ("j" evil-numbers/dec-at-pt)
         ("q" nil :exit t))
       (spacemacs/set-leader-keys
         "n+" 'spacemacs/evil-numbers-transient-state/evil-numbers/inc-at-pt
         "n=" 'spacemacs/evil-numbers-transient-state/evil-numbers/inc-at-pt
-        "n-" 'spacemacs/evil-numbers-transient-state/evil-numbers/dec-at-pt))))
+        "n-" 'spacemacs/evil-numbers-transient-state/evil-numbers/dec-at-pt
+        "n_" 'spacemacs/evil-numbers-transient-state/evil-numbers/dec-at-pt))))
 
 (defun spacemacs-evil/init-evil-surround ()
   (use-package evil-surround
     :defer t
     :init
     (progn
+      ;; `s' for surround instead of `substitute'
+      ;; see motivation here:
+      ;; https://github.com/syl20bnr/spacemacs/blob/develop/doc/DOCUMENTATION.org#the-vim-surround-case
+      (evil-define-key 'visual evil-surround-mode-map "s" 'evil-surround-region)
+      (evil-define-key 'visual evil-surround-mode-map "S" 'evil-substitute)
       (spacemacs|add-transient-hook evil-visual-state-entry-hook
         (lambda () (require 'evil-surround))
         lazy-load-evil-surround)
@@ -305,10 +322,6 @@
         lazy-load-evil-surround-2))
     :config
     (progn
-      ;; `s' for surround instead of `substitute'
-      ;; see motivation for this change in the documentation
-      (evil-define-key 'visual evil-surround-mode-map "s" 'evil-surround-region)
-      (evil-define-key 'visual evil-surround-mode-map "S" 'evil-substitute)
       (global-evil-surround-mode 1))))
 
 (defun spacemacs-evil/init-evil-terminal-cursor-changer ()
@@ -318,6 +331,10 @@
                 evil-insert-state-cursor 'bar
                 evil-emacs-state-cursor 'hbar)))
 
+(defun spacemacs-evil/init-evil-textobj-line ()
+  ;; No laziness here, the line text object should be available right away.
+  (use-package evil-textobj-line))
+
 (defun spacemacs-evil/init-evil-tutor ()
   (use-package evil-tutor
     :commands (evil-tutor-start
@@ -326,7 +343,7 @@
     (progn
       (setq evil-tutor-working-directory
             (concat spacemacs-cache-directory ".tutor/"))
-      (spacemacs/set-leader-keys "hT" 'evil-tutor-start))))
+      (spacemacs/set-leader-keys "hTv" 'evil-tutor-start))))
 
 (defun spacemacs-evil/init-evil-unimpaired ()
   ;; No laziness here, unimpaired bindings should be available right away.
@@ -360,7 +377,8 @@
     :commands (linum-relative-toggle linum-relative-on)
     :init
     (progn
-      (when (spacemacs/relative-line-numbers-p)
+      (when (or (spacemacs/visual-line-numbers-p)
+                (spacemacs/relative-line-numbers-p))
         (add-hook 'spacemacs-post-user-config-hook 'linum-relative-on))
       (spacemacs/set-leader-keys "tr" 'spacemacs/linum-relative-toggle))
     :config

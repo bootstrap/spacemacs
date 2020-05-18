@@ -57,9 +57,10 @@ to not have to set these variables manually when enabling this layer."
     :commands (sunshine-forecast sunshine-quick-forecast)
     :init
     (progn
+      (spacemacs/declare-prefix "aw" "weather")
       (spacemacs/set-leader-keys
-        "aw" 'sunshine-forecast
-        "aW" 'sunshine-quick-forecast))
+        "aww" 'sunshine-forecast
+        "awW" 'sunshine-quick-forecast))
     :config
     (progn
       (evilified-state-evilify-map sunshine-mode-map
@@ -68,7 +69,7 @@ to not have to set these variables manually when enabling this layer."
         (kbd "q") 'quit-window
         (kbd "i") 'sunshine-toggle-icons)
 
-      ;; just in case location was not set by user, or on OS X,
+      ;; just in case location was not set by user, or on macOS,
       ;; if wasn't set up automatically, will not work with Emacs'
       ;; default for `calendar-location-name'
       (unless (boundp 'sunshine-location)

@@ -16,11 +16,13 @@
     emmet-mode
     evil-matchit
     flycheck
+    import-js
     js-doc
     prettier-js
     rjsx-mode
     smartparens
     tern
+    tide
     web-beautify
     yasnippet
     ))
@@ -35,17 +37,18 @@
   (add-hook 'rjsx-mode-hook 'spacemacs/react-emmet-mode))
 
 (defun react/post-init-evil-matchit ()
-  (with-eval-after-load 'evil-matchit
-    (plist-put evilmi-plugins 'rjsx-mode
-               '((evilmi-simple-get-tag evilmi-simple-jump)
-                 (evilmi-javascript-get-tag evilmi-javascript-jump)
-                 (evilmi-html-get-tag evilmi-html-jump)))))
+  (add-hook 'rjsx-mode-hook 'turn-on-evil-matchit-mode))
 
 (defun react/post-init-flycheck ()
   (with-eval-after-load 'flycheck
     (dolist (checker '(javascript-eslint javascript-standard))
       (flycheck-add-mode checker 'rjsx-mode)))
-  (spacemacs/enable-flycheck 'rjsx-mode))
+  (spacemacs/enable-flycheck 'rjsx-mode)
+  (add-hook 'rjsx-mode-hook #'spacemacs//javascript-setup-checkers 'append))
+
+(defun react/pre-init-import-js ()
+  (when (eq javascript-import-tool 'import-js)
+    (add-to-list 'spacemacs--import-js-modes (cons 'rjsx-mode 'rjsx-mode-hook))))
 
 (defun react/post-init-js-doc ()
   (add-hook 'rjsx-mode-hook 'spacemacs/js-doc-require)
@@ -69,35 +72,46 @@
 
     ;; setup rjsx backend
     (add-hook 'rjsx-mode-local-vars-hook #'spacemacs//react-setup-backend)
+    ;; set next-error-function to nil because we use flycheck
+    (add-hook 'rjsx-mode-local-vars-hook #'spacemacs//react-setup-next-error-fn)
+    ;; setup fmt on save
+    (when javascript-fmt-on-save
+      (add-hook 'rjsx-mode-local-vars-hook #'spacemacs//react-fmt-before-save-hook))
 
     :config
     ;; declare prefix
     (spacemacs/declare-prefix-for-mode 'rjsx-mode "mr" "refactor")
+    (spacemacs/declare-prefix-for-mode 'rjsx-mode "mrl" "localize/log")
     (spacemacs/declare-prefix-for-mode 'rjsx-mode "mrr" "rename")
     (spacemacs/declare-prefix-for-mode 'rjsx-mode "mh" "documentation")
     (spacemacs/declare-prefix-for-mode 'rjsx-mode "mg" "goto")
 
-    (spacemacs/set-leader-keys-for-major-mode 'rjsx-mode "rrt" 'rjsx-rename-tag-at-point)
+    (spacemacs/set-leader-keys-for-major-mode 'rjsx-mode "rlt" 'js2r-log-this)
+    (spacemacs/set-leader-keys-for-major-mode 'rjsx-mode "rt" 'rjsx-rename-tag-at-point)
 
     (with-eval-after-load 'rjsx-mode
       (define-key rjsx-mode-map (kbd "C-d") nil))))
 
 (defun react/pre-init-prettier-js ()
-  (if (eq javascript-fmt-tool 'prettier)
-      (add-to-list 'spacemacs--prettier-modes 'rjsx-mode)))
+  (when (eq javascript-fmt-tool 'prettier)
+    (add-to-list 'spacemacs--prettier-modes 'rjsx-mode)))
 
 (defun react/post-init-smartparens ()
   (if dotspacemacs-smartparens-strict-mode
-      (add-hook 'react-mode-hook #'smartparens-strict-mode)
-    (add-hook 'react-mode-hook #'smartparens-mode)))
+      (add-hook 'rjsx-mode-hook #'smartparens-strict-mode)
+    (add-hook 'rjsx-mode-hook #'smartparens-mode)))
 
 (defun react/post-init-tern ()
   (add-to-list 'tern--key-bindings-modes 'rjsx-mode))
 
+(defun react/post-init-tide ()
+  (when (eq (spacemacs//typescript-backend) `tide)
+    (add-to-list 'tide-managed-modes 'rjsx-mode)))
+
 (defun react/pre-init-web-beautify ()
-  (if (eq javascript-fmt-tool 'web-beautify)
-      (add-to-list 'spacemacs--web-beautify-modes
-                   (cons 'rjsx-mode 'web-beautify-js))))
+  (when (eq javascript-fmt-tool 'web-beautify)
+    (add-to-list 'spacemacs--web-beautify-modes
+                 (cons 'rjsx-mode 'web-beautify-js))))
 
 (defun react/post-init-yasnippet ()
   (add-hook 'rjsx-mode-hook #'spacemacs//react-setup-yasnippet))

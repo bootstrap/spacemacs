@@ -18,9 +18,10 @@
         ))
 
 (defun ranger//set-leader-keys ()
+  (spacemacs/declare-prefix "ar" "ranger/deer")
   (spacemacs/set-leader-keys
-    "ar" 'ranger
-    "ad" 'deer
+    "arr" 'ranger
+    "ard" 'deer
     "jD" 'deer-jump-other-window
     "jd" 'deer))
 
@@ -40,7 +41,10 @@
       (unless (file-directory-p image-dired-dir)
         (make-directory image-dired-dir)))
     :config
-    (define-key ranger-mode-map (kbd "-") 'ranger-up-directory)))
+    (progn
+      (when (memq 'helm dotspacemacs-configuration-layers)
+        (require 'helm))
+      (define-key ranger-mode-map (kbd "-") 'ranger-up-directory))))
 
 (defun ranger/post-init-dired ()
   ;; Be sure to override dired bindings

@@ -21,15 +21,23 @@
         git-link
         git-messenger
         git-timemachine
+        golden-ratio
         (helm-git-grep :requires helm)
         (helm-gitignore :requires helm)
         magit
         magit-gitflow
+        magit-section
         magit-svn
+        org
         (orgit :requires org)
         smeargle
-        transient
-        ))
+        transient))
+
+
+(defun git/pre-init-golden-ratio ()
+  (spacemacs|use-package-add-hook golden-ratio
+    :post-config
+    (add-to-list 'golden-ratio-exclude-buffer-names " *transient*")))
 
 (defun git/pre-init-evil-magit ()
   (spacemacs|use-package-add-hook magit
@@ -71,10 +79,13 @@
     (progn
       (spacemacs/declare-prefix "gl" "links")
       (spacemacs/set-leader-keys
-        "gll" 'spacemacs/git-link
+        "glc" 'git-link-commit
+        "glC" 'spacemacs/git-link-commit-copy-url-only
+        "gll" 'git-link
         "glL" 'spacemacs/git-link-copy-url-only
-        "glc" 'spacemacs/git-link-commit
-        "glC" 'spacemacs/git-link-commit-copy-url-only)
+        "glp" 'spacemacs/git-permalink
+        "glP" 'spacemacs/git-permalink-copy-url-only)
+
       ;; default is to open the generated link
       (setq git-link-open-in-browser t))))
 
@@ -155,7 +166,7 @@
       (spacemacs/set-leader-keys
         "gb"  'spacemacs/git-blame-micro-state
         "gc"  'magit-clone
-        "gff" 'magit-find-file
+        "gfF" 'magit-find-file
         "gfl" 'magit-log-buffer-file
         "gfd" 'magit-diff
         "gi"  'magit-init
@@ -191,10 +202,10 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
       ;; bind function keys
       ;; (define-key magit-mode-map (kbd "<tab>") 'magit-section-toggle)
       (evilified-state-evilify-map magit-repolist-mode-map
-          :mode magit-repolist-mode
-          :bindings
-          (kbd "gr") 'magit-list-repositories
-          (kbd "RET") 'magit-repolist-status)
+        :mode magit-repolist-mode
+        :bindings
+        (kbd "gr") 'magit-list-repositories
+        (kbd "RET") 'magit-repolist-status)
       ;; confirm/abort
       (when dotspacemacs-major-mode-leader-key
         (add-hook 'with-editor-mode-hook 'evil-normalize-keymaps)
@@ -204,14 +215,32 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
               (concat mm-key mm-key) 'with-editor-finish
               (concat mm-key "a")    'with-editor-cancel
               (concat mm-key "c")    'with-editor-finish
-              (concat mm-key "k")    'with-editor-cancel))))
+              (concat mm-key "k")    'with-editor-cancel)
+            (evil-define-key state magit-log-select-mode-map
+              (concat mm-key mm-key) 'magit-log-select-pick
+              (concat mm-key "a")    'magit-log-select-quit
+              (concat mm-key "c")    'magit-log-select-pick
+              (concat mm-key "k")    'magit-log-select-quit))))
       ;; whitespace
       (define-key magit-status-mode-map (kbd "C-S-w")
         'spacemacs/magit-toggle-whitespace)
       ;; full screen magit-status
       (when git-magit-status-fullscreen
-        (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
-      (add-to-list 'magit-log-arguments "--color"))))
+        (setq magit-display-buffer-function
+              'magit-display-buffer-fullframe-status-v1))
+      (spacemacs|hide-lighter with-editor-mode)
+      ;; Workaround for #12747 - org-mode
+      (evil-define-key 'normal magit-blame-read-only-mode-map (kbd "RET") 'magit-show-commit)
+      ;; Make sure that M-m still switch windows in all magit buffers
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-1") 'winum-select-window-1)
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-2") 'winum-select-window-2)
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-3") 'winum-select-window-3)
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-4") 'winum-select-window-4)
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-5") 'winum-select-window-5)
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-6") 'winum-select-window-6)
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-7") 'winum-select-window-7)
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-8") 'winum-select-window-8)
+      (evil-define-key 'normal magit-section-mode-map (kbd "M-9") 'winum-select-window-9))))
 
 (defun git/init-magit-gitflow ()
   (use-package magit-gitflow
@@ -221,6 +250,10 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
     (progn
       (spacemacs|diminish magit-gitflow-mode "Flow")
       (define-key magit-mode-map "%" 'magit-gitflow-popup))))
+
+(defun git/init-magit-section ()
+  (use-package magit-section
+    :defer t))
 
 (defun git/init-magit-svn ()
   (use-package magit-svn
@@ -234,6 +267,13 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (defun git/init-orgit ()
   (use-package orgit
     :defer t))
+
+(defun git/post-init-org ()
+  ;; unfold the org headings for a target line
+  (advice-add 'magit-blame-addition :after #'spacemacs/org-reveal-advice)
+  (advice-add 'magit-diff-visit-file :after #'spacemacs/org-reveal-advice)
+  (advice-add 'magit-diff-visit-worktree-file
+              :after #'spacemacs/org-reveal-advice))
 
 (defun git/init-smeargle ()
   (use-package smeargle
@@ -249,7 +289,8 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
                  ("smeargle-clear" . "clear"))))
           (dolist (nd descr)
             ;; ensure the target matches the whole string
-            (push (cons (cons nil (concat "\\`" (car nd) "\\'")) (cons nil (cdr nd)))
+            (push (cons (cons nil (concat "\\`" (car nd) "\\'"))
+                        (cons nil (cdr nd)))
                   which-key-replacement-alist))))
       (spacemacs/set-leader-keys
         "gHc" 'smeargle-clear

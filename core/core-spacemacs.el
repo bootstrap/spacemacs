@@ -32,6 +32,7 @@
 (require 'core-micro-state)
 (require 'core-transient-state)
 (require 'core-use-package-ext)
+(require 'core-spacebind)
 
 (defgroup spacemacs nil
   "Spacemacs customizations."
@@ -70,6 +71,10 @@ the final step of executing code in `emacs-startup-hook'.")
                 evil-want-C-i-jump nil)
   (dotspacemacs/load-file)
   (dotspacemacs|call-func dotspacemacs/init "Calling dotfile init...")
+  (when dotspacemacs-undecorated-at-startup
+    ;; this should be called before toggle-frame-maximized
+    (set-frame-parameter nil 'undecorated t)
+    (add-to-list 'default-frame-alist '(undecorated . t)))
   (when dotspacemacs-maximized-at-startup
     (unless (frame-parameter nil 'fullscreen)
       (toggle-frame-maximized))
@@ -99,7 +104,7 @@ the final step of executing code in `emacs-startup-hook'.")
                                     dotspacemacs-editing-style))
   (configuration-layer/initialize)
   ;; frame title init
-  (when (and (display-graphic-p) dotspacemacs-frame-title-format)
+  (when dotspacemacs-frame-title-format
     (require 'format-spec)
     (setq frame-title-format '((:eval (spacemacs/title-prepare dotspacemacs-frame-title-format))))
     (if dotspacemacs-icon-title-format
@@ -205,12 +210,18 @@ Note: the hooked function is not executed when in dumped mode."
      ;; nil earlier in the startup process to properly handle command line
      ;; arguments.
      (setq initial-buffer-choice (lambda () (get-buffer spacemacs-buffer-name)))
+
+     ;; Activate winner-mode for non dumped emacs sessions. Do this prior to
+     ;; user-config to allow users to disable the feature and patch ediff
+     ;; themselves. See issue 12582 for details.
+     (winner-mode t)
+
      ;; Ultimate configuration decisions are given to the user who can defined
      ;; them in his/her ~/.spacemacs file
      (dotspacemacs|call-func dotspacemacs/user-config
-                   "Calling dotfile user config...")
+                             "Calling dotfile user config...")
      (dotspacemacs|call-func dotspacemacs/emacs-custom-settings
-                   "Calling dotfile Emacs custom settings...")
+                             "Calling dotfile Emacs custom settings...")
      ;; don't write custom settings into the dotfile before loading them,
      ;; otherwise https://github.com/syl20bnr/spacemacs/issues/10504 happens
      (spacemacs/initialize-custom-file-sync)
@@ -227,6 +238,8 @@ Note: the hooked function is not executed when in dumped mode."
      (spacemacs/check-for-new-version nil spacemacs-version-check-interval)
      (setq spacemacs-initialized t)
      (setq gc-cons-threshold (car dotspacemacs-gc-cons)
-           gc-cons-percentage (cadr dotspacemacs-gc-cons)))))
+           gc-cons-percentage (cadr dotspacemacs-gc-cons))
+     (unless (version< emacs-version "27")
+       (setq read-process-output-max dotspacemacs-read-process-output-max)))))
 
 (provide 'core-spacemacs)

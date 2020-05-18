@@ -62,7 +62,8 @@ or `sp-local-pair'."
 
 (defun spacemacs//conditionally-enable-smartparens-mode ()
   "Enable `smartparens-mode' in the minibuffer, during `eval-expression'."
-  (if (eq this-command 'eval-expression)
+  (if (or (eq this-command 'eval-expression)
+          (eq this-command 'eldoc-eval-expression))
       (smartparens-mode)))
 
 (defun spacemacs//adaptive-smartparent-pair-overlay-face ()
@@ -70,6 +71,16 @@ or `sp-local-pair'."
                       :inherit 'lazy-highlight
                       :background nil
                       :foreground nil))
+
+(defun spacemacs//put-clean-aindent-last ()
+  "Put `clean-aindent--check-last-point` to end of `post-command-hook`.
+This functions tries to ensure that clean-aindent checks for indent
+operations after each indent operations have been done.
+
+See issues #6520 and #13172"
+  (when clean-aindent-mode
+    (remove-hook 'post-command-hook 'clean-aindent--check-last-point)
+    (add-hook 'post-command-hook 'clean-aindent--check-last-point t)))
 
 
 ;; uuidgen

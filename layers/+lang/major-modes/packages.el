@@ -1,4 +1,4 @@
-;;; config.el --- Major modes Layer packages File for Spacemacs
+;;; packages.el --- Major modes Layer packages File for Spacemacs
 ;;
 ;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
 ;;
@@ -14,7 +14,6 @@
         arduino-mode
         (ebuild-mode :location (recipe :fetcher github :repo "emacsmirror/ebuild-mode"))
         (hoon-mode :location (recipe :fetcher github :repo "urbit/hoon-mode.el"))
-        kivy-mode
         (logcat :location (recipe :fetcher github :repo "dcolascione/logcat-mode"))
         matlab-mode
         pkgbuild-mode
@@ -46,8 +45,6 @@
   (use-package logcat
     :commands (logcat logcat-mode)))
 
-(defun major-modes/init-kivy-mode ())
-
 (defun major-modes/init-matlab-mode ()
   (use-package matlab-mode
     :defer t
@@ -68,6 +65,7 @@
         "a" 'pkgbuild-tar
         "u" 'pkgbuild-browse-url
         "m" 'pkgbuild-update-sums-line
+        "s" 'pkgbuild-update-srcinfo
         "e" 'pkgbuild-etags))))
 
 (defun major-modes/init-qml-mode ()

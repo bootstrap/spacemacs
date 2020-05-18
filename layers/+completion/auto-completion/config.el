@@ -12,7 +12,7 @@
 ;; Company -------------------------------------------------------------------
 
 (defvar spacemacs-default-company-backends
-  '((company-dabbrev-code company-gtags company-etags company-keywords)
+  '((company-semantic company-dabbrev-code company-gtags company-etags company-keywords)
     company-files company-dabbrev)
   "The list of default company backends used by spacemacs.
 This variable is used to configure mode-specific company backends in spacemacs.
@@ -38,6 +38,9 @@ selection.")
   "Timeout (seconds) when waiting for the second key of
 `auto-completion-complete-with-key-sequence'.")
 
+(defvar auto-completion-minimum-prefix-length 2
+  "The minimum prefix length for idle completion.")
+
 (defvar auto-completion-idle-delay 0.2
   "Delay (seconds) before completions are shown.")
 
@@ -51,6 +54,9 @@ selection.")
   "If non nil the docstring appears in a tooltip.
 If set to `manual', help tooltip appears only when invoked
 manually.")
+
+(defvar auto-completion-use-company-box nil
+  "If non nil company-box is used.")
 
 (defvar company-mode-completion-cancel-keywords
   '("do"

@@ -30,11 +30,15 @@
     :mode ("\\.\\(pum\\|puml\\)\\'" . plantuml-mode)
     :config
     (progn
+      ;; Our default is jar execution, not server as server is not working reliable see #13574
+      (setq plantuml-default-exec-mode 'jar)
       (when (boundp 'spacemacs-indent-sensitive-modes)
         ;; for now plantuml electric indentation is buggy and does not
         ;; really work, let's disable auto-indentation on paste for
         ;; this mode
         (add-to-list 'spacemacs-indent-sensitive-modes 'plantuml-mode))
+      (spacemacs/declare-prefix-for-mode 'plantuml-mode
+        "mc" "compile")
       (spacemacs/set-leader-keys-for-major-mode 'plantuml-mode
         "cc" 'plantuml-preview
         "co" 'plantuml-set-output-type))))
